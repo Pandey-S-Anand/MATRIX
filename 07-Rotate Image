@@ -1,0 +1,29 @@
+class Solution {
+    public void rotate(int[][] mat) {
+      findTranspose(mat,mat.length);
+
+      for(int i=0;i<mat.length;i++)
+        reverseRow(mat[i]);
+    }
+
+    public static void findTranspose(int[][]mat,int n)
+    {
+      for(int i=0;i<n;i++)
+        for(int j=0;j<i;j++)
+        {
+          int temp=mat[i][j];
+          mat[i][j]=mat[j][i];
+          mat[j][i]=temp;
+        }
+    }
+
+    public static void reverseRow(int[]arr)
+    {
+       for(int i=0;i<(arr.length/2);i++)
+       {
+         int temp=arr[i];
+         arr[i]=arr[arr.length-1-i];
+         arr[arr.length-1-i]=temp;
+       }
+    }
+}
