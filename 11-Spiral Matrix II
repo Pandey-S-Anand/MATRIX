@@ -1,0 +1,68 @@
+class Solution {
+    // Enum to represent 4 directions of traversal in a spiral (clockwise)
+    private static enum Direction {
+        LEFT_TO_RIGHT,
+        TOP_TO_BOTTOM,
+        RIGHT_TO_LEFT,
+        BOTTOM_TO_TOP
+    }
+
+    public int[][] generateMatrix(int n) {
+        // Initialize the result matrix
+        int[][] mat = new int[n][n];
+
+        // Define matrix boundaries
+        int top = 0, bottom = n - 1;
+        int left = 0, right = n - 1;
+
+        // Start from the first number
+        int num = 1;
+
+        // Initial direction is left to right
+        Direction direction = Direction.LEFT_TO_RIGHT;
+
+        // Continue the spiral traversal while boundaries are valid
+        while (top <= bottom && left <= right) {
+            switch (direction) {
+
+                case LEFT_TO_RIGHT:
+                    // Fill the top row from left to right
+                    for (int i = left; i <= right; i++) {
+                        mat[top][i] = num++;
+                    }
+                    top++;  // Move the top boundary downward
+                    direction = Direction.TOP_TO_BOTTOM;
+                    break;
+
+                case TOP_TO_BOTTOM:
+                    // Fill the right column from top to bottom
+                    for (int i = top; i <= bottom; i++) {
+                        mat[i][right] = num++;
+                    }
+                    right--;  // Move the right boundary to the left
+                    direction = Direction.RIGHT_TO_LEFT;
+                    break;
+
+                case RIGHT_TO_LEFT:
+                    // Fill the bottom row from right to left
+                    for (int i = right; i >= left; i--) {
+                        mat[bottom][i] = num++;
+                    }
+                    bottom--;  // Move the bottom boundary upward
+                    direction = Direction.BOTTOM_TO_TOP;
+                    break;
+
+                case BOTTOM_TO_TOP:
+                    // Fill the left column from bottom to top
+                    for (int i = bottom; i >= top; i--) {
+                        mat[i][left] = num++;
+                    }
+                    left++;  // Move the left boundary to the right
+                    direction = Direction.LEFT_TO_RIGHT;
+                    break;
+            }
+        }
+
+        return mat;
+    }
+}
