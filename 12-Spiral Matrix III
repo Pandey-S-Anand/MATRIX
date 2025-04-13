@@ -1,0 +1,175 @@
+/*
+ * Spiral Matrix Traversal — The "Concentric Square" Analogy
+ * 
+ * Imagine standing at the center of a large square grid. From there, you begin to walk
+ * in a spiral path — first heading east (right), then south (down), then west (left),
+ * then north (up), and then again east... repeating this cycle.
+ * 
+ * Each time you complete two directions (e.g., EAST and SOUTH), you increase the step length.
+ * Why? Because you're essentially forming **concentric squares** 
+ * around your starting point — each square larger than the last.
+ * 
+ * If we don’t increase the step size after every two turns, we’d stay stuck in a tight loop
+ * near the center, repeatedly visiting the same cells and never reaching the full matrix.
+ * 
+ * 🔄 Step Increase Pattern:
+ * - After moving EAST and SOUTH (with certain step count) → step size increases by 1 
+ *   (now it's time to move west so increase step by 1)
+ * - After moving WEST and NORTH (with certain step count) → step size increases again by 1 
+ *   (now it's time to move east so increase step by 1)
+ * 
+ * This continues until we've covered all cells.
+ * 
+ * This apparently means we are increasing step count when we are moving in east and west.
+ * 
+ * 🎯 Purpose of Expanding Step Size:
+ * - Ensures that the spiral expands outward from the center in layers
+ * - Avoids overlapping or revisiting cells
+ * - Guarantees full matrix coverage, even if we temporarily move outside the grid
+ * 
+ * 🧪 Example Dry Run:
+ * Let's take a 5x6 grid and start at position (1, 4)
+ * 
+ * Spiral path step-by-step:
+ * 
+ * Initial: (1,4) ✅
+ *
+ * Initial state (empty grid with coordinates):
+ * 
+ * [ (0,0), (0,1), (0,2), (0,3), (0,4), (0,5) ]
+ * [ (1,0), (1,1), (1,2), (1,3), (1,4), (1,5) ]
+ * [ (2,0), (2,1), (2,2), (2,3), (2,4), (2,5) ]
+ * [ (3,0), (3,1), (3,2), (3,3), (3,4), (3,5) ]
+ * [ (4,0), (4,1), (4,2), (4,3), (4,4), (4,5) ]
+ *
+ * Step-by-step spiral path:
+ *
+ * 1. Move EAST → 1 step → (1,4) → (1,5)
+ *
+ * 2. Move SOUTH → 1 step → (1,5) → (2,5)
+ *
+ * 3. Move WEST → 2 steps → (2,5) → (2,4) → (2,3)
+ *    
+ * 4. Move NORTH → 2 steps → (2,3) → (1,3) → (0,3)
+ *    
+ * 5. Move EAST → 3 steps → (0,3) → (0,4) → (0,5) → (0,6) (Out of bounds)
+ *    ... continues in similar manner until all the cells of the matrix are visited.
+ * ✅ At each step, we only record valid (in-bounds) positions in our final result.
+ * 
+ *   Key Observations:
+ * - **East:** Increases the **column** (`c++`), row stays the same.
+ * - **South:** Increases the **row** (`r++`), column stays the same.
+ * - **West:** Decreases the **column** (`c--`), row stays the same.
+ * - **North:** Decreases the **row** (`r--`), column stays the same.
+ */
+
+
+class Solution {
+    // Define the enum for directions with row and column changes
+    private static enum Direction {
+        EAST(0, 1), // EAST: Move right (increment column)
+        SOUTH(1, 0), // SOUTH: Move down (increment row)
+        WEST(0, -1), // WEST: Move left (decrement column)
+        NORTH(-1, 0); // NORTH: Move up (decrement row)
+
+        // Row and column deltas for each direction
+        private final int rowDelta;
+        private final int colDelta;
+
+        // Constructor to set the deltas for each direction
+        Direction(int rowDelta, int colDelta) {
+            this.rowDelta = rowDelta;
+            this.colDelta = colDelta;
+        }
+
+        // Getter methods to retrieve the deltas
+        public int getRowDelta() {
+            return rowDelta;
+        }
+
+        public int getColDelta() {
+            return colDelta;
+        }
+    }
+
+    private int[][] coordinates; //Spiral path coordinates
+    private int index; // Current index for inserting into the coordinates array
+    private int steps; // Number of steps to take in current direction
+    private int row, col; // Current position (row and col) during traversal
+
+    public int[][] spiralMatrixIII(int rows, int cols, int rStart, int cStart) {
+        int size = rows * cols;
+        coordinates = new int[size][2]; // Allocate array to hold all cell coordinates
+        index = 0;
+
+        Direction direction = Direction.EAST; // Start from EAST
+        steps = 1; // Initial step size
+        row = rStart;
+        col = cStart;
+
+        int directionSwitchCount = 0; // Tracks how many direction changes have occurred
+
+        // Record the starting cell
+        coordinates[index++] = new int[] { row, col };
+
+        // Continue moving in spiral until all cells are recorded
+        while (index < size) {
+            switch (direction) {
+                case EAST:
+                    traverse(rows, cols, direction);
+                    directionSwitchCount++;
+                    direction = Direction.SOUTH;
+                    break;
+
+                case SOUTH:
+                    traverse(rows, cols, direction);
+                    directionSwitchCount++;
+                    direction = Direction.WEST;
+                    break;
+
+                case WEST:
+                    traverse(rows, cols, direction);
+                    directionSwitchCount++;
+                    direction = Direction.NORTH;
+                    break;
+
+                case NORTH:
+                    traverse(rows, cols, direction);
+                    directionSwitchCount++;
+                    direction = Direction.EAST;
+                    break;
+            }
+
+            // After every two directions , increase step size
+            if (directionSwitchCount == 2) {
+                steps++;
+                directionSwitchCount = 0;
+            }
+        }
+
+        return coordinates;
+    }
+
+    // Traverse the grid in the given direction for 'steps' times, and add valid (in-bound) positions to the 'coordinates' array.
+    private void traverse(int rows, int cols, Direction direction) {
+        for (int step = 0; step < steps; step++) {
+            // Move in the current direction
+            row += direction.getRowDelta();
+            col += direction.getColDelta();
+
+            // If still within the matrix bounds, record the cell
+            if (isWithinBounds(row, col, rows, cols)) {
+                coordinates[index++] = new int[] { row, col };
+                // Early exit: if we've recorded all cells, stop further traversal
+                if (index == rows * cols) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private boolean isWithinBounds(int row, int col, int rows, int cols) {
+        return row >= 0 && row < rows && col >= 0 && col < cols;
+    }
+}
+
