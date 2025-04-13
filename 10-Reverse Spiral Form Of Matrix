@@ -1,1 +1,137 @@
+//Brutefoce approach
 
+class Solution {
+    public int[] reverseSpiral(int rows, int cols, int[][] mat) {
+        //Find the spiral order traversal (clockwise) of a matrix
+        int[] spiralTraversal = spiralOrder(mat, rows, cols);
+        //Reverse the array in-place to obtain reverse spiral traversal of matrix.
+        return reverseSpiralTraversal(spiralTraversal, rows * cols);
+    }
+
+    private static enum Direction {
+        LEFT_TO_RIGHT,
+        TOP_TO_BOTTOM,
+        RIGHT_TO_LEFT,
+        BOTTOM_TO_TOP
+    }
+
+    private int[] spiralOrder(int[][] mat, int rows, int cols) {
+        int top = 0, bottom = rows - 1;
+        int left = 0, right = cols - 1;
+
+        Direction direction = Direction.LEFT_TO_RIGHT;
+
+        int[] spiralTraversal = new int[rows * cols];
+        int index = 0;
+
+        while (top <= bottom && left <= right) {
+            switch (direction) {
+                case LEFT_TO_RIGHT:
+                    for (int i = left; i <= right; i++) {
+                        spiralTraversal[index++] = mat[top][i];
+                    }
+                    top++;
+                    direction = Direction.TOP_TO_BOTTOM;
+                    break;
+
+                case TOP_TO_BOTTOM:
+                    for (int i = top; i <= bottom; i++) {
+                        spiralTraversal[index++] = mat[i][right];
+                    }
+                    right--;
+                    direction = Direction.RIGHT_TO_LEFT;
+                    break;
+
+                case RIGHT_TO_LEFT:
+                    for (int i = right; i >= left; i--) {
+                        spiralTraversal[index++] = mat[bottom][i];
+                    }
+                    bottom--;
+                    direction = Direction.BOTTOM_TO_TOP;
+                    break;
+
+                case BOTTOM_TO_TOP:
+                    for (int i = bottom; i >= top; i--) {
+                        spiralTraversal[index++] = mat[i][left];
+                    }
+                    left++;
+                    direction = Direction.LEFT_TO_RIGHT;
+                    break;
+            }
+        }
+
+        return spiralTraversal;
+    }
+
+    private int[] reverseSpiralTraversal(int[] arr, int n) {
+        for (int i = 0; i < n / 2; i++) {
+            int temp = arr[i];
+            arr[i] = arr[n - 1 - i];
+            arr[n - 1 - i] = temp;
+        }
+        return arr;
+    }
+}
+
+
+
+//Optimal approach
+
+class Solution {
+    private static enum Direction {
+        LEFT_TO_RIGHT,
+        TOP_TO_BOTTOM,
+        RIGHT_TO_LEFT,
+        BOTTOM_TO_TOP
+    }
+
+    public int[] reverseSpiral(int rows, int cols, int[][] mat) {
+        int top = 0, bottom = rows - 1;
+        int left = 0, right = cols - 1;
+
+        Direction direction = Direction.LEFT_TO_RIGHT;
+
+        //Array to store reverse spiral directly
+        int[] reverseSpiralTraversal = new int[rows * cols];
+        int index = rows * cols - 1; // Start filling from the end
+
+        // Traverse the matrix in spiral order and fill array from back
+        while (top <= bottom && left <= right) {
+            switch (direction) {
+                case LEFT_TO_RIGHT:
+                    for (int i = left; i <= right; i++) {
+                        reverseSpiralTraversal[index--] = mat[top][i];
+                    }
+                    top++;
+                    direction = Direction.TOP_TO_BOTTOM;
+                    break;
+
+                case TOP_TO_BOTTOM:
+                    for (int i = top; i <= bottom; i++) {
+                        reverseSpiralTraversal[index--] = mat[i][right];
+                    }
+                    right--;
+                    direction = Direction.RIGHT_TO_LEFT;
+                    break;
+
+                case RIGHT_TO_LEFT:
+                    for (int i = right; i >= left; i--) {
+                        reverseSpiralTraversal[index--] = mat[bottom][i];
+                    }
+                    bottom--;
+                    direction = Direction.BOTTOM_TO_TOP;
+                    break;
+
+                case BOTTOM_TO_TOP:
+                    for (int i = bottom; i >= top; i--) {
+                        reverseSpiralTraversal[index--] = mat[i][left];
+                    }
+                    left++;
+                    direction = Direction.LEFT_TO_RIGHT;
+                    break;
+            }
+        }
+
+        return reverseSpiralTraversal;
+    }
+}
