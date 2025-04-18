@@ -1,0 +1,328 @@
+// Bruteforce approach
+
+class Solution {
+    // Returns the first index in arr such that the corresponding number makes a full row or column painted in mat.
+    public int firstCompleteIndex(int[] arr, int[][] mat) {
+        for (int i = 0; i < arr.length; i++) {
+            markPositionAsPainted(mat, arr[i]); // Paint the cell that matches the current number
+            // Checks if any row or column in the matrix is fully painted
+            if (isAnyRowFullyPainted(mat) || isAnyColumnFullyPainted(mat)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void markPositionAsPainted(int[][] mat, int target) {
+        for (int row = 0; row < mat.length; row++) {
+            for (int col = 0; col < mat[0].length; col++) {
+                if (mat[row][col] == target) {
+                    mat[row][col] = -1; // Mark as painted
+                    return; // Early exit after painting
+                }
+            }
+        }
+    }
+
+    private boolean isAnyRowFullyPainted(int[][] mat) {
+        for (int row = 0; row < mat.length; row++) {
+            boolean rowPainted = true;
+            for (int col = 0; col < mat[0].length; col++) {
+                if (mat[row][col] != -1) {
+                    rowPainted = false;
+                    break;
+                }
+            }
+            if (rowPainted) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyColumnFullyPainted(int[][] mat) {
+        for (int col = 0; col < mat[0].length; col++) {
+            boolean colPainted = true;
+            for (int row = 0; row < mat.length; row++) {
+                if (mat[row][col] != -1) {
+                    colPainted = false;
+                    break;
+                }
+            }
+            if (colPainted) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+
+//Improved approach
+
+class Solution {
+    private static class Cell {
+        private final int row;
+        private final int col;
+
+        Cell(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public int getCol() {
+            return col;
+        }
+    }
+
+    // Maps each matrix value to its corresponding cell (row, col)
+    private Map<Integer, Cell> valueToPositionMap;
+
+    // Tracks how many cells have been painted (i.e., marked -1) in each row
+    private Map<Integer, Integer> paintedCellsInRow;
+
+    // Tracks how many cells have been painted in each column
+    private Map<Integer, Integer> paintedCellsInCol;
+
+    public int firstCompleteIndex(int[] arr, int[][] mat) {
+        preprocessMatrix(mat);
+
+        // Paint cells in the order of arr[] and track progress
+        for (int index = 0; index < arr.length; index++) {
+            markCellAsPainted(mat, arr[index]);
+
+            // Check after each paint if any row or column is completely painted
+            if (isAnyRowFullyPainted(mat) || isAnyColumnFullyPainted(mat)) {
+                return index;
+            }
+        }
+
+        return -1; // No full row or column was painted
+    }
+
+    private void preprocessMatrix(int[][] mat) {
+        valueToPositionMap = new HashMap<>();
+        paintedCellsInRow = new HashMap<>();
+        paintedCellsInCol = new HashMap<>();
+
+        for (int row = 0; row < mat.length; row++) {
+            paintedCellsInRow.put(row, 0); // Initialize row counter
+            for (int col = 0; col < mat[0].length; col++) {
+                int value = mat[row][col];
+                valueToPositionMap.put(value, new Cell(row, col)); // Map value to cell
+                paintedCellsInCol.put(col, 0); // Initialize column counter
+            }
+        }
+    }
+
+    private void markCellAsPainted(int[][] mat, int target) {
+        Cell position = valueToPositionMap.get(target);
+        int row = position.getRow();
+        int col = position.getCol();
+
+        mat[row][col] = -1; // Paint the cell
+
+        // Update the count of painted cells in the corresponding row and column
+        paintedCellsInRow.put(row, paintedCellsInRow.get(row) + 1);
+        paintedCellsInCol.put(col, paintedCellsInCol.get(col) + 1);
+    }
+
+    private boolean isAnyRowFullyPainted(int[][] mat) {
+        int columns = mat[0].length;
+        for (int row = 0; row < mat.length; row++) {
+            if (paintedCellsInRow.get(row) == columns) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyColumnFullyPainted(int[][] mat) {
+        int rows = mat.length;
+        for (int col = 0; col < mat[0].length; col++) {
+            if (paintedCellsInCol.get(col) == rows) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+//Better approach
+
+class Solution {
+    private static class Cell {
+        private final int row;
+        private final int col;
+
+        Cell(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public int getCol() {
+            return col;
+        }
+    }
+
+    // Maps matrix value → its position in the matrix (i.e., row and col)
+    private Map<Integer, Cell> valueToCellMap;
+
+    // Keeps count of how many cells are painted in each row
+    private Map<Integer, Integer> paintedCellsInRow;
+
+    // Keeps count of how many cells are painted in each column
+    private Map<Integer, Integer> paintedCellsInCol;
+
+    public int firstCompleteIndex(int[] arr, int[][] mat) {
+        // Preprocess: build maps to track positions of values and initialize paint counters
+        preprocessMatrix(mat);
+
+        int rows = mat.length;
+        int cols = mat[0].length;
+
+        // Paint cells in the order defined by arr[]
+        for (int index = 0; index < arr.length; index++) {
+            int value = arr[index];
+
+            // Get the matrix position (row, col) of the current value
+            Cell cell = valueToCellMap.get(value);
+            int row = cell.getRow();
+            int col = cell.getCol();
+
+            // Mark the cell as painted by setting it to -1
+            mat[row][col] = -1;
+
+            // Update the count of painted cells in the corresponding row and column
+            paintedCellsInRow.put(row, paintedCellsInRow.get(row) + 1);
+            paintedCellsInCol.put(col, paintedCellsInCol.get(col) + 1);
+
+            // Check if the current row or column is fully painted
+            if (paintedCellsInRow.get(row) == cols || paintedCellsInCol.get(col) == rows) {
+                return index; // Return the current index as soon as a full row/col is painted
+            }
+        }
+
+        return -1; // Should never happen per problem constraints
+    }
+
+    private void preprocessMatrix(int[][] mat) {
+        valueToCellMap = new HashMap<>();
+        paintedCellsInRow = new HashMap<>();
+        paintedCellsInCol = new HashMap<>();
+
+        for (int row = 0; row < mat.length; row++) {
+            paintedCellsInRow.put(row, 0); // Initialize row paint counter
+            for (int col = 0; col < mat[0].length; col++) {
+                int value = mat[row][col];
+
+                // Map the matrix value to its corresponding cell position
+                valueToCellMap.put(value, new Cell(row, col));
+
+                // Initialize column paint counter (only once per column)
+                paintedCellsInCol.putIfAbsent(col, 0);
+            }
+        }
+    }
+}
+
+
+//Optimal approach
+
+class Solution {
+    private Map<Integer, int[]> valueToCellMap;
+    private int[] paintedCellsInRow;
+    private int[] paintedCellsInCol;
+
+    public int firstCompleteIndex(int[] arr, int[][] mat) {
+        preprocessMatrix(mat);
+
+        int rows = mat.length;
+        int cols = mat[0].length;
+
+        for (int index = 0; index < arr.length; index++) {
+            int value = arr[index];
+
+            int[] cell = valueToCellMap.get(value);
+            int row = cell[0];
+            int col = cell[1];
+
+            paintedCellsInRow[row]++;
+            paintedCellsInCol[col]++;
+
+            if (paintedCellsInRow[row] == cols || paintedCellsInCol[col] == rows) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void preprocessMatrix(int[][] mat) {
+        valueToCellMap = new HashMap<>();
+        paintedCellsInRow = new int[mat.length];
+        paintedCellsInCol = new int[mat[0].length];
+
+        for (int row = 0; row < mat.length; row++) {
+            for (int col = 0; col < mat[0].length; col++) {
+                valueToCellMap.put(mat[row][col], new int[] { row, col });
+            }
+        }
+    }
+}
+
+//Aliter
+
+class Solution {
+    private int[][] valueToCellMap;
+    private int[] paintedCellsInRow;
+    private int[] paintedCellsInCol;
+
+    public int firstCompleteIndex(int[] arr, int[][] mat) {
+        preprocessMatrix(mat);
+
+        int rows = mat.length;
+        int cols = mat[0].length;
+
+        for (int index = 0; index < arr.length; index++) {
+            int value = arr[index];
+            int[] cell = valueToCellMap[value]; // Direct access, no hash map
+            int row = cell[0];
+            int col = cell[1];
+
+            paintedCellsInRow[row]++;
+            paintedCellsInCol[col]++;
+
+            if (paintedCellsInRow[row] == cols || paintedCellsInCol[col] == rows) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void preprocessMatrix(int[][] mat) {
+        int m = mat.length, n = mat[0].length;
+        valueToCellMap = new int[m * n + 1][2]; // 1-based indexing
+        paintedCellsInRow = new int[m];
+        paintedCellsInCol = new int[n];
+
+        for (int row = 0; row < m; row++) {
+            for (int col = 0; col < n; col++) {
+                int val = mat[row][col];
+                valueToCellMap[val][0] = row;
+                valueToCellMap[val][1] = col;
+            }
+        }
+    }
+}
