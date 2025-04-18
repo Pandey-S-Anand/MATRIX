@@ -1,0 +1,108 @@
+/*
+    Both robots can only move either to the right or down.
+
+    Since Robot 1 moves first and both robots play optimally,
+    Robot 1 will aim to minimize the maximum number of points Robot 2 can collect.
+
+    At each column `col`, Robot 1 considers this column as the turning point
+    where it switches from the top row to the bottom row,
+    and then moves right only to reach the destination (1, n - 1).
+
+    After turning down:
+        - All cells visited by Robot 1 (in both rows) are set to 0 and can't be used by Robot 2.
+        - From the turning point onward, Robot 1 only continues right on the bottom row.
+        - Robot 2 will then take the path that allows it to collect the most remaining points.
+
+    At this point, Robot 2 has two choices:
+        1. Stay on the top row and collect the remaining points → remainingTopRowPoints
+        2. Go down early and collect from the bottom row cells that Robot 1 has skipped → skippedBottomRowPointsByRobot1
+
+    Robot 2 will naturally pick the path that gives the maximum of these two options.
+
+    So for each column, we compute: robot2Points = max(remainingTopRowPoints, skippedBottomRowPointsByRobot1)
+
+
+
+    ------------------------
+    🔍 Example: grid = [[2, 3, 1, 9], 
+                        [5, 2, 7, 1]]
+    Initial total points in the top row = 15
+
+    Simulating each column as a potential turning point for Robot 1:
+
+        Turn Down At: col = 0
+        --------------------------------------------
+        Robot 1 Path: (0,0) → (1,0) → (1,1) → (1,2) → (1,3)
+        Robot 2 Path: (0,0) → (0,1) → (0,2) → (0,3)
+        Top Remaining: 3 + 1 + 9 = 13
+        Bottom Skipped: 0
+        Robot 2 Points = max(13, 0) = 13
+
+        Turn Down At: col = 1
+        --------------------------------------------
+        Robot 1 Path: (0,0) → (0,1) → (1,1) → (1,2) → (1,3)
+        Robot 2 Path: (0,0) → (0,2) → (0,3)
+        Top Remaining: 1 + 9 = 10
+        Bottom Skipped: 5
+        Robot 2 Points = max(10, 5) = 10
+
+        Turn Down At: col = 2
+        --------------------------------------------
+        Robot 1 Path: (0,0) → (0,1) → (0,2) → (1,2) → (1,3)
+        Robot 2 Path: (0,0) → (0,1) → (0,3)
+        Top Remaining: 9
+        Bottom Skipped: 5 + 2 = 7
+        Robot 2 Points = max(9, 7) = 9
+
+        Turn Down At: col = 3
+        --------------------------------------------
+        Robot 1 Path: (0,0) → (0,1) → (0,2) → (0,3) → (1,3)
+        Robot 2 Path: (0,0) → (0,1) → (0,2) → (1,2)
+        Top Remaining: 0
+        Bottom Skipped: 5 + 2 + 7 = 14
+        Robot 2 Points = max(0, 14) = 14
+
+    ✅ Robot 1 should turn down at column 2 to minimize the best case for Robot 2.
+    ✅ The optimal outcome is: Robot 2 collects at most 9 points.
+*/
+
+public class Solution {
+    public long gridGame(int[][] grid) {
+        // Calculate the total points in the top row — before Robot 1 starts moving
+        long remainingTopRowPoints = 0;
+        for (int points : grid[0]) {
+            remainingTopRowPoints += points;
+        }
+
+        long minRobot2Points = Long.MAX_VALUE;
+
+        /* 
+        Keep track of the points Robot 1 will skip in the bottom row while it moves.
+        These skipped points in the bottom row will be available for Robot 2 to collect if Robot 2 moves down early.
+        */
+        long skippedBottomRowPointsByRobot1 = 0;
+
+        // Try turning down at each column (0 to n - 1)
+        for (int col = 0; col < grid[0].length; col++) {
+            // Robot 1 collects the top cell in this column, making it unavailable for Robot 2
+            remainingTopRowPoints -= grid[0][col];
+
+            /*
+            Robot 2 will then choose the path that maximizes the points it collects.
+            It can either:
+             1. Continue on the top row and collect from the remaining cells in the top row
+             2. Go down early and collect the points in the bottom row (which Robot 1 skipped)
+            */
+            long robot2Points = Math.max(remainingTopRowPoints, skippedBottomRowPointsByRobot1);
+
+            // Robot 1 plays optimally to minimize the maximum points that Robot 2 can collect.
+            minRobot2Points = Math.min(minRobot2Points, robot2Points);
+
+            // Add the points of the current cell in the bottom row to the skipped total
+            skippedBottomRowPointsByRobot1 += grid[1][col];
+        }
+
+        // Return the minimum of the maximum points Robot 2 can collect
+        return minRobot2Points;
+    }
+}
